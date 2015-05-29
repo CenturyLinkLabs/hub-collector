@@ -16,9 +16,9 @@ CREATE TABLE images (
 
 CREATE TABLE last_term (
   term varchar(2)
-)
+);
 
-INSERT INTO last_term...
+INSERT INTO last_term (term) values('__');
 
 CREATE TABLE tags (
   id serial PRIMARY KEY,
