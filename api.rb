@@ -1,11 +1,11 @@
 require 'net/http'
 require 'json'
 
-def search(query, page=1)
+def search(query, page=1, num=25)
   tries = 0
   begin
     tries += 1
-    uri = URI("https://index.docker.io/v1/search?q=#{query}&page=#{page}")
+    uri = URI("https://index.docker.io/v1/search?q=#{query}&page=#{page}&n=#{num}")
 
     req = Net::HTTP::Get.new(uri)
 
