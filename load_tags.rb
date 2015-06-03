@@ -15,23 +15,28 @@ conn.prepare('upsert_tag', upsert_tag)
 res = conn.exec('SELECT id, name FROM repos')
 
 res.each do |repo|
-  auth = get_auth(repo['name'])
-  tags = list_tags(repo['name'], auth)
+  begin
+    auth = get_auth(repo['name'])
+    tags = list_tags(repo['name'], auth)
 
-  tags.each do |name, layer_id|
-    puts "#{repo['name']}:#{name} - #{layer_id}"
+    tags.each do |name, layer_id|
+      puts "#{repo['name']}:#{name} - #{layer_id}"
 
-    layer_record = begin
-      conn.exec_prepared('insert_layer', [layer_id])
-    rescue PG::UniqueViolation
-      conn.exec_prepared('select_layer', [layer_id])
+      layer_record = begin
+        conn.exec_prepared('insert_layer', [layer_id])
+      rescue PG::UniqueViolation
+        conn.exec_prepared('select_layer', [layer_id])
+      end
+
+      begin
+        conn.exec_prepared('upsert_tag', [repo['id'], name, layer_record[0]['id']])
+      rescue PG::UniqueViolation
+      end
     end
 
-    begin
-      conn.exec_prepared('upsert_tag', [repo['id'], name, layer_record[0]['id']])
-    rescue PG::UniqueViolation
-    end
+    sleep(1)
+  rescue => ex
+    puts "### FAIL: #{repo['name']}"
+    puts ex
   end
-
-  sleep(1)
 end
