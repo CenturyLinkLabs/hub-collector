@@ -34,8 +34,8 @@ CREATE TABLE tags (
 );
 
 CREATE TABLE tag_layers (
-  tag_id int,
-  layer_id int,
+  tag_id int NOT NULL,
+  layer_id int NOT NULL,
   CONSTRAINT fk1_tag_layers FOREIGN KEY (tag_id) REFERENCES tags (id),
   CONSTRAINT fk2_tag_layers FOREIGN KEY (layer_id) REFERENCES layers (id),
   CONSTRAINT u_tag_id_layer_id UNIQUE (tag_id, layer_id)
