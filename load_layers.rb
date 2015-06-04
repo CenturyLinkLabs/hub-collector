@@ -18,11 +18,12 @@ insert_join = 'INSERT INTO tag_layers (tag_id, layer_id) VALUES ($1, $2)'
 conn = PG.connect(dbname: 'hub', user: 'hub', password: 'foo', host: '127.0.0.1')
 
 conn.prepare('select_layer', select_layer)
-conn.prepare('insert_layer', insert_layer)
 conn.prepare('update_layer', update_layer)
+conn.prepare('insert_layer', insert_layer)
 conn.prepare('insert_join', insert_join)
 
 res = conn.exec(select_tags)
+errors = []
 
 res.each do |tag|
   tag_id = tag['tag_id']
@@ -57,6 +58,10 @@ res.each do |tag|
     
   rescue => ex
     puts "ERROR: #{ex}"
+    errors << ex
   end
   sleep(1)
 end
+
+puts "ERRORS: #{errors.count}"
+puts errors
