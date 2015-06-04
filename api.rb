@@ -16,7 +16,8 @@ def search(query, page=1, num=25)
       http.request(req)
     end
 
-  JSON.parse(res.body)
+    check_status(res)
+    JSON.parse(res.body)
   rescue => ex
     if try <= 1
       retry
@@ -34,10 +35,12 @@ def get_auth(repo)
 
   http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = true
-    
+
   res = http.start do |http|
     http.request(req)
   end
+
+  check_status(res)
 
   {
     token: res['X-Docker-Token'],
@@ -53,11 +56,12 @@ def list_tags(repo, auth)
 
   http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = true
-    
+
   res = http.start do |http|
     http.request(req)
   end
 
+  check_status(res)
   JSON.parse(res.body)
 end
 
@@ -69,10 +73,25 @@ def get_ancestry(image_id, auth)
 
   http = Net::HTTP.new(uri.host, uri.port)
   http.use_ssl = true
-    
+
   res = http.start do |http|
     http.request(req)
   end
 
+  check_status(res)
   JSON.parse(res.body)
+end
+
+class NotFoundError < StandardError; end
+class ServerError < StandardError; end
+
+def check_status(response)
+  case response
+  when Net::HTTPSuccess
+    true
+  when Net::HTTPNotFound
+    raise NotFoundError, "#{response.code} - #{response.uri}"
+  else
+    raise ServerError, "#{response.code} - #{response.uri}"
+  end
 end
