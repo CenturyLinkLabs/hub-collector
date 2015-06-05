@@ -2,6 +2,7 @@ CREATE TABLE layers (
   id serial PRIMARY KEY,
   layer_id char(64) UNIQUE,
   parent_id int,
+  marked boolean,
   updated_at timestamp,
   CONSTRAINT fk1_layers FOREIGN KEY (parent_id) REFERENCES layers (id)
 );
