@@ -19,7 +19,7 @@ def search(query, page=1, num=25)
     check_status(res)
     JSON.parse(res.body)
   rescue => ex
-    if try <= 1
+    if tries <= 1
       retry
     else
       raise ex

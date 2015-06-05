@@ -1,5 +1,5 @@
 require_relative 'api'
-require 'pg'
+require_relative 'db'
 
 select_tags = 'SELECT repos.name AS repo_name, tags.id AS tag_id, tags.name AS tag_name, layers.layer_id'\
   ' FROM repos, tags, layers'\
@@ -14,8 +14,6 @@ insert_layer = 'INSERT INTO layers'\
   ' SELECT $1, $2, current_timestamp RETURNING id'
 
 insert_join = 'INSERT INTO tag_layers (tag_id, layer_id) VALUES ($1, $2)'
-
-conn = PG.connect(dbname: 'hub', user: 'hub', password: 'foo', host: '127.0.0.1')
 
 conn.prepare('select_layer', select_layer)
 conn.prepare('update_layer', update_layer)
