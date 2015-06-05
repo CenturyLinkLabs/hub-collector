@@ -1,0 +1,127 @@
+!!!
+%html
+  %head
+    %meta{:content => "text/html; charset=utf-8", "http-equiv" => "Content-type"}/
+    %title Dashboard
+    :css
+      .thing {
+        float: left;
+        margin: 0 10px 10px 0;
+      }
+      .scroller {
+        overflow-y: scroll;
+        height: 500px;
+        border: magenta 1px solid;
+        width: 400px;
+      }
+
+      .bar {
+        clear: both;
+      }
+  %body
+    %h1 Hub Dashboard!!!
+    .bar
+      %h2 
+        Repo Stats:
+
+      %strong total:
+      = badass_number total_repos
+      %strong automated:
+      = badass_number total_automated
+      = "(#{badass_percentage(total_automated,total_repos)})"
+      %strong official:
+      = badass_number total_official
+      = "(#{badass_percentage(total_official, total_repos)})"
+
+    .thing
+      %h3 Official Repos by Star Count (top 100, but really less)
+      .scroller
+        %table
+          %thead
+            %tr
+              %th Rank
+              %th Name
+              %th Star Count
+          %tbody
+            - official_repos_by_star.each_with_index do |row, i|
+              %tr
+                %td= i + 1
+                %td= row['name']
+                %td= row['star_count']
+      
+    .thing
+      %h3 Un-Official Repos by Star Count (top 100)
+      .scroller
+        %table
+          %thead
+            %tr
+              %th Rank
+              %th Name
+              %th Star Count
+          %tbody
+            - non_official_repos_by_star.each_with_index do |row, i|
+              %tr
+                %td= i + 1
+                %td= row['name']
+                %td= row['star_count']
+        
+    .thing
+      %h3 Repos with most tags (top 100)
+      .scroller
+        %table
+          %thead
+            %tr
+              %th Rank
+              %th Name
+              %th # of tags
+              %th Official?
+          %tbody
+            - repos_with_tag_count.each_with_index do |row, i|
+              %tr
+                %td= i + 1
+                %td= row['name']
+                %td= row['tag_count']
+                %td= badass_bool(row['is_official'])
+          
+    .thing
+      %h3 Orginizations with the most repos (top 100)
+      .scroller
+        %table
+          %thead
+            %tr
+              %th Rank
+              %th Org Name
+              %th Number of repos
+          %tbody
+            - repos_by_org.each_with_index do |row, i|
+              %tr
+                %td= i + 1
+                %td= row['org']
+                %td= row['repo_count']
+
+    .bar
+      %h2 
+        Repo to Tag relAtionship Stats:
+
+      %strong Average number of tags per repo
+      = badass_ratio(total_tags, total_repos)
+      %strong Median number of tags per repo
+      = median_tags_per_repo
+
+
+    .thing
+      %h3 Most popular tag names across repos (top 100)
+      .scroller
+        %table
+          %thead
+            %tr
+              %th Rank
+              %th Tag Name
+              %th Number of tags with this name
+          %tbody
+            - tags_grouped_by_name.each_with_index do |row, i|
+              %tr
+                %td= i + 1
+                %td= row['name']
+                %td= row['name_count']
+
