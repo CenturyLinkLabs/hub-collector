@@ -2,7 +2,6 @@ CREATE TABLE layers (
   id serial PRIMARY KEY,
   layer_id char(64) UNIQUE,
   parent_id int,
-  marked boolean,
   updated_at timestamp,
   CONSTRAINT fk1_layers FOREIGN KEY (parent_id) REFERENCES layers (id)
 );
@@ -14,7 +13,9 @@ CREATE TABLE repos (
   is_trusted boolean,
   is_official boolean,
   is_automated boolean,
-  star_count int
+  star_count int,
+  marked boolean,
+  updated_at timestamp,
 );
 
 CREATE TABLE last_term (
