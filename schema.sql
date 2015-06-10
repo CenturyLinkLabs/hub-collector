@@ -1,10 +1,3 @@
-CREATE TABLE layers (
-  id serial PRIMARY KEY,
-  layer_id char(64) UNIQUE,
-  parent_id int,
-  updated_at timestamp,
-  CONSTRAINT fk1_layers FOREIGN KEY (parent_id) REFERENCES layers (id)
-);
 
 CREATE TABLE repos (
   id serial PRIMARY KEY,
@@ -16,6 +9,7 @@ CREATE TABLE repos (
   star_count int,
   marked boolean,
   updated_at timestamp,
+  last_loaded timestamp
 );
 
 CREATE TABLE last_term (
@@ -23,6 +17,14 @@ CREATE TABLE last_term (
 );
 
 INSERT INTO last_term (term) values('__');
+
+CREATE TABLE layers (
+  id serial PRIMARY KEY,
+  layer_id char(64) UNIQUE,
+  parent_id int,
+  updated_at timestamp,
+  CONSTRAINT fk1_layers FOREIGN KEY (parent_id) REFERENCES layers (id)
+);
 
 CREATE TABLE tags (
   id serial PRIMARY KEY,
@@ -34,6 +36,7 @@ CREATE TABLE tags (
   CONSTRAINT fk2_tags FOREIGN KEY (layer_id) REFERENCES layers (id),
   CONSTRAINT u_repo_id_name UNIQUE (repo_id, name)
 );
+
 
 CREATE TABLE tag_layers (
   tag_id int NOT NULL,

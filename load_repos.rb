@@ -7,8 +7,8 @@ update = 'UPDATE repos'\
   ' WHERE name=$1'
 
 insert = 'INSERT INTO repos'\
-  ' (name, description, is_trusted, is_official, is_automated, star_count, updated_at)'\
-  ' SELECT $1, $2, $3, $4, $5, $6, current_timestamp'
+  ' (name, description, is_trusted, is_official, is_automated, star_count, updated_at, last_loaded)'\
+  ' SELECT $1, $2, $3, $4, $5, $6, current_timestamp, \'1974-02-12\''
 
 conn.prepare('upsert', "WITH upsert AS (#{update} RETURNING *) #{insert} WHERE NOT EXISTS (SELECT * FROM upsert);")
 

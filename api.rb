@@ -20,6 +20,7 @@ def search(query, page=1, num=25)
     JSON.parse(res.body)
   rescue => ex
     if tries <= 1
+      sleep(5)
       retry
     else
       raise ex

@@ -2,54 +2,95 @@ require_relative 'api'
 require_relative 'db'
 require 'time'
 
-insert_layer = 'INSERT INTO layers (layer_id, updated_at) VALUES ($1, current_timestamp) RETURNING id'
-select_layer = 'SELECT id FROM layers WHERE layer_id=$1'
+conn.prepare('select_tags',                 'SELECT id FROM tags WHERE repo_id=$1')
+conn.prepare('delete_tag_layers_by_tag_id', 'DELETE FROM tag_layers WHERE tag_id=$1')
+conn.prepare('delete_tag',                  'DELETE FROM tags WHERE id=$1')
 
-insert_tag = 'INSERT INTO tags (repo_id, name, layer_id, updated_at) SELECT $1, $2, $3, current_timestamp'
-update_tag = 'UPDATE tags SET layer_id=$3, updated_at=current_timestamp WHERE repo_id=$1 AND name=$2'
-upsert_tag = "WITH upsert AS (#{update_tag} RETURNING *) #{insert_tag} WHERE NOT EXISTS (SELECT * FROM upsert);"
+conn.prepare('select_layer', 'SELECT id, layer_id, parent_id from layers WHERE layer_id=$1')
+conn.prepare('insert_layer', 'INSERT INTO layers'\
+  ' (layer_id, parent_id, updated_at)'\
+  ' VALUES ($1, $2, current_timestamp) RETURNING id')
 
-mark_repo = 'UPDATE repos SET marked = true WHERE id = $1'
+conn.prepare('insert_tag', 'INSERT INTO tags (repo_id, name, updated_at) VALUES ($1, $2, current_timestamp) RETURNING id')
+conn.prepare('update_tag', 'UPDATE tags SET layer_id=$2, updated_at=current_timestamp WHERE id=$1')
 
-conn.prepare('insert_layer', insert_layer)
-conn.prepare('select_layer', select_layer)
-conn.prepare('upsert_tag', upsert_tag)
-conn.prepare('mark_repo', mark_repo)
+conn.prepare('insert_join', 'INSERT INTO tag_layers (tag_id, layer_id) VALUES ($1, $2)')
+
+conn.prepare('update_repo', 'UPDATE repos SET last_loaded=current_timestamp WHERE id=$1')
+
+conn.prepare('mark_repo', 'UPDATE repos SET marked = true WHERE id=$1')
+
+def delete_repo_tags(repo_id)
+  conn.transaction do |c|
+    tags = c.exec_prepared('select_tags', [repo_id])
+    tags.each do |tag|
+      c.exec_prepared('delete_tag_layers_by_tag_id', [tag['id']]) 
+      c.exec_prepared('delete_tag', [tag['id']]) 
+    end
+  end
+end
 
 # Forever
-loop do
+#loop do
   puts "start crawl: #{Time.now}"
 
-  repos = conn.exec('SELECT id, name FROM repos ORDER BY updated_at DESC')
+  repos = conn.exec('SELECT id, name FROM repos ORDER BY last_loaded ASC')
 
   repos.each do |repo|
     repo_id = repo['id']
     repo_name = repo['name']
+    puts "REPO: #{repo_name}"
+
+    delete_repo_tags(repo_id)
 
     begin
       auth = get_auth(repo_name)
       tags = list_tags(repo_name, auth)
 
-      tags.each do |name, layer_id|
+      tags.each do |name, tag_layer_id|
+        puts "  TAG: #{name}"
         begin
-          layer_record = begin
-            conn.exec_prepared('insert_layer', [layer_id])
-          rescue PG::UniqueViolation
-            conn.exec_prepared('select_layer', [layer_id])
+          # Insert tag (minus layer_id)
+          tag = conn.exec_prepared('insert_tag', [repo_id, name])
+          tag_rec_id = tag[0]['id']
+
+          ancestry = get_ancestry(tag_layer_id, auth)
+
+          layer_rec_id = nil
+          parent_rec_id = nil
+          ancestry.reverse.each do |layer_id|
+            conn.transaction do |c|
+              # Insert or find layer (many layers will already exist)
+              layers = c.exec_prepared('select_layer', [layer_id])
+              if layers.count == 0
+                layer = c.exec_prepared('insert_layer', [layer_id, parent_rec_id])[0]
+              else
+                layer = layers[0]
+              end
+
+              layer_rec_id = layer['id']
+
+              # Insert join between tag and layer
+              c.exec_prepared('insert_join', [tag_rec_id, layer_rec_id])
+            end
+
+            parent_rec_id = layer_rec_id
           end
 
-          conn.exec_prepared('upsert_tag', [repo_id, name, layer_record[0]['id']])
+          # Update tag (w/ layer_id this time)
+          conn.exec_prepared('update_tag', [tag_rec_id, layer_rec_id])
+
+          sleep(1)
         rescue => ex
-          puts "ERROR: #{ex} (#{repo_name})"
+          puts "ERROR: #{ex} (#{repo_name}:#{name})"
         end
       end
 
+      conn.exec_prepared('update_repo', [repo_id])
     rescue NotFoundError
       conn.exec_prepared('mark_repo', [repo_id])
     rescue => ex
       puts "ERROR: #{ex} (#{repo_name})"
     end
-
-    sleep(1)
   end
-end
+#end
