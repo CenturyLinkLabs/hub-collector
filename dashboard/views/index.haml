@@ -2,21 +2,50 @@
 %html
   %head
     %meta{:content => "text/html; charset=utf-8", "http-equiv" => "Content-type"}/
+    %meta{:content => "width=device-width, initial-scale=1, maximum-scale=1", :name => "viewport"}/
     %title Dashboard
     :css
+      body {
+        background: black;
+        color: magenta;
+      }
+
+      h1 {
+        font-size: 80px;
+        background: -webkit-linear-gradient(magenta, lime);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
       .thing {
         float: left;
-        margin: 0 10px 10px 0;
+        margin: 10px 10px 10px 0;
+        border: magenta 1px solid;
+        border-width: 0 1px 1px 1px;
+      }
+      .thing h3 {
+        margin: 0;
+        padding: 10px;
+        background-color: magenta;
+        color: black;
       }
       .scroller {
         overflow-y: scroll;
         height: 500px;
-        border: magenta 1px solid;
-        width: 400px;
+        width: 450px;
       }
 
       .bar {
+        background: lime;
+        color: black;
+        padding: 10px;
         clear: both;
+      }
+      table {
+        width: 100%;
+      }
+      table td,
+      table th{
+        border: grey 1px solid;
       }
   %body
     %h1 Hub Dashboard!!!
@@ -66,24 +95,6 @@
                 %td= row['star_count']
         
     .thing
-      %h3 Repos with most tags (top 100)
-      .scroller
-        %table
-          %thead
-            %tr
-              %th Rank
-              %th Name
-              %th # of tags
-              %th Official?
-          %tbody
-            - repos_with_tag_count.each_with_index do |row, i|
-              %tr
-                %td= i + 1
-                %td= row['name']
-                %td= row['tag_count']
-                %td= badass_bool(row['is_official'])
-          
-    .thing
       %h3 Orginizations with the most repos (top 100)
       .scroller
         %table
@@ -108,7 +119,24 @@
       %strong Median number of tags per repo
       = median_tags_per_repo
 
-
+    .thing
+      %h3 Repos with most tags (top 100)
+      .scroller
+        %table
+          %thead
+            %tr
+              %th Rank
+              %th Name
+              %th # of tags
+              %th Official?
+          %tbody
+            - repos_with_tag_count.each_with_index do |row, i|
+              %tr
+                %td= i + 1
+                %td= row['name']
+                %td= row['tag_count']
+                %td= badass_bool(row['is_official'])
+          
     .thing
       %h3 Most popular tag names across repos (top 100)
       .scroller
@@ -124,4 +152,22 @@
                 %td= i + 1
                 %td= row['name']
                 %td= row['name_count']
+
+    .thing
+      %h3 Most popular layers (top 100)
+      .scroller
+        %table
+          %thead
+            %tr
+              %th Rank
+              %th Layer ID 
+              %th Tags
+              %th Number of referencing images
+          %tbody
+            - most_referenced_layers.each_with_index do |row, i|
+              %tr
+                %td= i + 1
+                %td= row['layer_id']
+                %td= row['images']
+                %td= badass_number(row['count'])
 

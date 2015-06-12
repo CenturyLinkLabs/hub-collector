@@ -1,19 +1,6 @@
 * Backup pg db
-* Grab all the tags for each image
-** Select a batch of images (i.e. dont select them all at once)
-** for each image authenticate, then call `#list_tags`
-** insert tags into the db
-*** insert tag record, then layer record, the join record for each tag
-** populate remaining tag+layer entries with `#get_ancestry`
-* Schema changes
-** images -> repos
-** audit primary keys
-** layers should have an auto-increment key??
-** Uniqueness constraint on image_id+name in tags table
-** Uniqueness constraint on tag_id+layer_id in tag_layers table
-** add db indexes
+* populate remaining tag+layer entries with `#get_ancestry`
 
-{'latest':'abc123', '12.4':'abc123'}
 
 Repos
   tags
@@ -24,3 +11,16 @@ ubuntu:latest -> acd345
 - adc456 < ^
 - ythasdf
 - gthasdf
+
+## Potential Dashboard stats
+
+x * Number of automated / Number of not-automated (and %)
+x * list official repos sorted by star count or some shit.
+x * Repos with highest star count, non-official
+x * Repos grouped by number of tags DESC
+
+
+* Mean, Range, Median, Mode of tags per repo
+* Organizations with the most repos -> repos -> tag count
+* Most popular tag names (across repos)
+  * select name, count(name) as name_count from tags group by name order by name_count desc
