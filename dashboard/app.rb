@@ -4,7 +4,7 @@ require 'pg'
 
 set :bind, '0.0.0.0'
 
-$conn = PG.connect(dbname: 'hub', user: 'hub', password: 'foo', host: '127.0.0.1')
+$conn = PG.connect(dbname: 'hub', user: 'hub', password: 'hub', host: '127.0.0.1')
 
 get '/' do
   haml :index
@@ -58,6 +58,23 @@ end
 
 def official_repos_by_star
   $conn.exec('SELECT name, star_count FROM repos WHERE is_official order by star_count DESC limit 100')
+end
+
+def total_layers
+  res = $conn.exec('SELECT count(*) FROM layers')
+  res[0]['count'].to_i
+end
+
+def most_referenced_layers
+  res = $conn.exec('SELECT layers.layer_id, string_agg(repos.name||\':\'||tags.name, \'|\') AS images, layers.count AS count FROM ( SELECT tags.layer_id, COUNT(tag_layers.layer_id) AS count FROM ( SELECT DISTINCT tags.layer_id FROM TAGS) AS tags JOIN tag_layers ON tags.layer_id = tag_layers.layer_id GROUP BY tags.layer_id ORDER BY count DESC LIMIT 100) AS layers JOIN tags ON layers.layer_id = tags.layer_id JOIN repos ON tags.repo_id = repos.id GROUP BY layers.layer_id, layers.count ORDER BY layers.count desc;')
+
+  res.map do |r|
+    {
+      'layer_id' => r['layer_id'],
+      'images' => r['images'].split('|').reject { |x| x.include?('/') }.join(', '),
+      'count' => r['count']
+    }
+  end
 end
 
 def badass_number(num)

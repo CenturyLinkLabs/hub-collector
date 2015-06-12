@@ -27,5 +27,4 @@ loop do
   end
 
   puts "deleted #{deleted_layers} layers"
-  sleep(5*60)
 end
