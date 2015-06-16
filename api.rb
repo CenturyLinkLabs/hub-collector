@@ -81,6 +81,26 @@ def get_ancestry(image_id, auth)
   end
 end
 
+def get_id_for_tag(repo, tag, auth)
+  retry_once do
+    uri = URI("https://#{auth[:endpoint]}/v1/repositories/#{repo}/tags/#{tag}")
+
+    req = Net::HTTP::Get.new(uri)
+    req['Authorization'] = "Token #{auth[:token]}"
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+
+    res = http.start do |http|
+      http.request(req)
+    end
+
+    check_status(res)
+    #res.body.gsub(/^\"/, '').gsub(/$\"/,'')
+    res.body[1..-2]
+  end
+end
+
 def retry_once
   retryable = true
   begin

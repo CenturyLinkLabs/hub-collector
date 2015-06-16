@@ -1,13 +1,47 @@
 require 'sinatra'
 require 'haml'
 require 'pg'
+require_relative '../api'
 
 set :bind, '0.0.0.0'
 
 $conn = PG.connect(dbname: 'hub', user: 'hub', password: 'hub', host: '127.0.0.1')
 
+$conn.prepare('lookup_layer_id', 'SELECT id FROM layers WHERE layer_id = $1')
+$conn.prepare('lookup_tags', 'SELECT repos.name||\':\'||tags.name AS name FROM tags JOIN repos ON tags.repo_id = repos.id WHERE layer_id = $1')
+
 get '/' do
   haml :index
+end
+
+get '/analyze' do
+  expected = params[:expected] && params[:expected].split("\r\n")
+  @results = params[:image] ? analyze(params[:image], (expected || [])) : {layers: {}, unmatched_tags: []}
+  haml :analyze
+end
+
+def analyze(image, expected)
+  repo, tag = image.split(':')
+
+  auth = get_auth(repo)
+  id = get_id_for_tag(repo, tag, auth)
+  layers = get_ancestry(id, auth)
+
+  layer_results = {}
+  layers.reverse.each do |layer_id|
+    res = $conn.exec_prepared('lookup_layer_id', [layer_id])
+    tags = $conn.exec_prepared('lookup_tags', [res[0]['id']])
+
+    layer_results[layer_id] = tags.map do |h| 
+      h['match'] = expected.include? h['name']
+      expected.delete(h['name'])
+      h
+    end
+  end
+  { 
+    layers: layer_results || {},
+    unmatched_tags: expected || []
+  }
 end
 
 def total_official
@@ -87,6 +121,10 @@ end
 
 def badass_bool(flag)
   flag == "f" ? "FALSE" : "TRUE"
+end
+
+def badass_id(id)
+  id[0..11]
 end
 
 def badass_ratio(num, den)

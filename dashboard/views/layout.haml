@@ -1,0 +1,132 @@
+!!!
+%html
+  %head
+    %meta{:content => "text/html; charset=utf-8", "http-equiv" => "Content-type"}/
+    %meta{:content => "width=device-width, initial-scale=1, maximum-scale=1", :name => "viewport"}/
+    %title Dashboard
+    :css
+      body {
+        background: black;
+        color: magenta;
+      }
+
+      .check {
+        font-size: 40px;
+        color: green;
+      }
+
+      em.untagged {
+        color: plum;
+        font-style: italic;
+        font-size: 12px;
+      }
+
+      span.untagged {
+        color: MediumOrchid;
+      }
+
+      form {
+        float: left;
+        width: 400px;
+      }
+
+      .results {
+        margin-left: 420px;
+      }
+
+      input[type='text'],
+      textarea {
+        width: 100%;
+        display: block;
+        margin-bottom: 15px;
+        box-sizing: border-box;
+      }
+
+      textarea {
+        height: 200px;
+      }
+
+      button {
+        font-size: 50px;
+        border: magenta 10px outset;
+        background: -webkit-linear-gradient(magenta, lime);
+        cursor: pointer;
+        padding: 10px 20px;
+        width: 100%;
+        box-sizing: border-box;
+      }
+      button:hover {
+        border-style: inset;
+      }
+
+      a {
+        color: aqua;
+      }
+
+      .missing-tags {
+        margin-bottom: 15px;
+        padding: 10px;
+        border: red 10px groove;
+        color: red;
+      }
+      .missing-tags a {
+        color: red;
+      }
+
+      .mono {
+        font-family: "Courier New", Courier, monospace;
+      }
+
+      form label {
+        display: block;
+      }
+
+      .layer {
+        border-bottom: magenta 1px solid;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+      }
+
+      .layer .tags {
+        margin-left: 95px;
+      }
+
+      h1 {
+        font-size: 80px;
+        background: -webkit-linear-gradient(magenta, lime);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .thing {
+        float: left;
+        margin: 10px 10px 10px 0;
+        border: magenta 1px solid;
+        border-width: 0 1px 1px 1px;
+      }
+      .thing h3 {
+        margin: 0;
+        padding: 10px;
+        background-color: magenta;
+        color: black;
+      }
+      .scroller {
+        overflow-y: scroll;
+        height: 500px;
+        width: 450px;
+      }
+
+      .bar {
+        background: lime;
+        color: black;
+        padding: 10px;
+        clear: both;
+      }
+      table {
+        width: 100%;
+      }
+      table td,
+      table th{
+        border: grey 1px solid;
+      }
+  %body
+    = yield

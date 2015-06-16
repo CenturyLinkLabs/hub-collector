@@ -1,180 +1,130 @@
-!!!
-%html
-  %head
-    %meta{:content => "text/html; charset=utf-8", "http-equiv" => "Content-type"}/
-    %meta{:content => "width=device-width, initial-scale=1, maximum-scale=1", :name => "viewport"}/
-    %title Dashboard
-    :css
-      body {
-        background: black;
-        color: magenta;
-      }
+%h1 Hub Dashboard!!!
+.bar
+  %h2
+    Repo Stats:
 
-      h1 {
-        font-size: 80px;
-        background: -webkit-linear-gradient(magenta, lime);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-      .thing {
-        float: left;
-        margin: 10px 10px 10px 0;
-        border: magenta 1px solid;
-        border-width: 0 1px 1px 1px;
-      }
-      .thing h3 {
-        margin: 0;
-        padding: 10px;
-        background-color: magenta;
-        color: black;
-      }
-      .scroller {
-        overflow-y: scroll;
-        height: 500px;
-        width: 450px;
-      }
+  %strong total:
+  = badass_number total_repos
+  %strong automated:
+  = badass_number total_automated
+  = "(#{badass_percentage(total_automated,total_repos)})"
+  %strong official:
+  = badass_number total_official
+  = "(#{badass_percentage(total_official, total_repos)})"
 
-      .bar {
-        background: lime;
-        color: black;
-        padding: 10px;
-        clear: both;
-      }
-      table {
-        width: 100%;
-      }
-      table td,
-      table th{
-        border: grey 1px solid;
-      }
-  %body
-    %h1 Hub Dashboard!!!
-    .bar
-      %h2
-        Repo Stats:
+.thing
+  %h3 Official Repos by Star Count (top 100, but really less)
+  .scroller
+    %table
+      %thead
+        %tr
+          %th Rank
+          %th Name
+          %th Star Count
+      %tbody
+        - official_repos_by_star.each_with_index do |row, i|
+          %tr
+            %td= i + 1
+            %td= row['name']
+            %td= row['star_count']
 
-      %strong total:
-      = badass_number total_repos
-      %strong automated:
-      = badass_number total_automated
-      = "(#{badass_percentage(total_automated,total_repos)})"
-      %strong official:
-      = badass_number total_official
-      = "(#{badass_percentage(total_official, total_repos)})"
+.thing
+  %h3 Un-Official Repos by Star Count (top 100)
+  .scroller
+    %table
+      %thead
+        %tr
+          %th Rank
+          %th Name
+          %th Star Count
+      %tbody
+        - non_official_repos_by_star.each_with_index do |row, i|
+          %tr
+            %td= i + 1
+            %td= row['name']
+            %td= row['star_count']
 
-    .thing
-      %h3 Official Repos by Star Count (top 100, but really less)
-      .scroller
-        %table
-          %thead
-            %tr
-              %th Rank
-              %th Name
-              %th Star Count
-          %tbody
-            - official_repos_by_star.each_with_index do |row, i|
-              %tr
-                %td= i + 1
-                %td= row['name']
-                %td= row['star_count']
+.thing
+  %h3 Orginizations with the most repos (top 100)
+  .scroller
+    %table
+      %thead
+        %tr
+          %th Rank
+          %th Org Name
+          %th Number of repos
+      %tbody
+        - repos_by_org.each_with_index do |row, i|
+          %tr
+            %td= i + 1
+            %td= row['org']
+            %td= row['repo_count']
 
-    .thing
-      %h3 Un-Official Repos by Star Count (top 100)
-      .scroller
-        %table
-          %thead
-            %tr
-              %th Rank
-              %th Name
-              %th Star Count
-          %tbody
-            - non_official_repos_by_star.each_with_index do |row, i|
-              %tr
-                %td= i + 1
-                %td= row['name']
-                %td= row['star_count']
+.bar
+  %h2
+    Repo to Tag relAtionship Stats:
 
-    .thing
-      %h3 Orginizations with the most repos (top 100)
-      .scroller
-        %table
-          %thead
-            %tr
-              %th Rank
-              %th Org Name
-              %th Number of repos
-          %tbody
-            - repos_by_org.each_with_index do |row, i|
-              %tr
-                %td= i + 1
-                %td= row['org']
-                %td= row['repo_count']
+  %strong Average number of tags per repo
+  = badass_ratio(total_tags, total_repos)
+  %strong Median number of tags per repo
+  = median_tags_per_repo
 
-    .bar
-      %h2
-        Repo to Tag relAtionship Stats:
+.thing
+  %h3 Repos with most tags (top 100)
+  .scroller
+    %table
+      %thead
+        %tr
+          %th Rank
+          %th Name
+          %th # of tags
+          %th Official?
+      %tbody
+        - repos_with_tag_count.each_with_index do |row, i|
+          %tr
+            %td= i + 1
+            %td= row['name']
+            %td= row['tag_count']
+            %td= badass_bool(row['is_official'])
 
-      %strong Average number of tags per repo
-      = badass_ratio(total_tags, total_repos)
-      %strong Median number of tags per repo
-      = median_tags_per_repo
+.thing
+  %h3 Most popular tag names across repos (top 100)
+  .scroller
+    %table
+      %thead
+        %tr
+          %th Rank
+          %th Tag Name
+          %th Number of tags with this name
+      %tbody
+        - tags_grouped_by_name.each_with_index do |row, i|
+          %tr
+            %td= i + 1
+            %td= row['name']
+            %td= row['name_count']
 
-    .thing
-      %h3 Repos with most tags (top 100)
-      .scroller
-        %table
-          %thead
-            %tr
-              %th Rank
-              %th Name
-              %th # of tags
-              %th Official?
-          %tbody
-            - repos_with_tag_count.each_with_index do |row, i|
-              %tr
-                %td= i + 1
-                %td= row['name']
-                %td= row['tag_count']
-                %td= badass_bool(row['is_official'])
+.bar
+  %h2
+    Layers
 
-    .thing
-      %h3 Most popular tag names across repos (top 100)
-      .scroller
-        %table
-          %thead
-            %tr
-              %th Rank
-              %th Tag Name
-              %th Number of tags with this name
-          %tbody
-            - tags_grouped_by_name.each_with_index do |row, i|
-              %tr
-                %td= i + 1
-                %td= row['name']
-                %td= row['name_count']
+  %strong Total layers
+  = badass_number(total_layers)
 
-    .bar
-      %h2
-        Layers
-
-      %strong Total layers
-      = badass_number(total_layers)
-
-    .thing
-      %h3 Most popular layers (top 100)
-      .scroller
-        %table
-          %thead
-            %tr
-              %th Rank
-              %th Layer ID
-              %th Tags
-              %th Number of referencing images
-          %tbody
-            - most_referenced_layers.each_with_index do |row, i|
-              %tr
-                %td= i + 1
-                %td= row['layer_id']
-                %td= row['images']
-                %td= badass_number(row['count'])
+.thing
+  %h3 Most popular layers (top 100)
+  .scroller
+    %table
+      %thead
+        %tr
+          %th Rank
+          %th Layer ID
+          %th Tags
+          %th Number of referencing images
+      %tbody
+        - most_referenced_layers.each_with_index do |row, i|
+          %tr
+            %td= i + 1
+            %td= row['layer_id']
+            %td= row['images']
+            %td= badass_number(row['count'])
 

@@ -1,0 +1,30 @@
+%h1 Analyze yo image
+
+%form{ method: 'get' }
+  %label
+    Image name
+    %input{ type: 'text', name: 'image', placeholder: 'e.g. centurylink/panamax-ui:latest', value: params[:image] }
+  %label
+    Expected Tags
+    %textarea{ name: 'expected', placeholder: 'gliderlabs/alpine:3.1' }= params[:expected]
+  %button Analyze
+
+.results
+  .missing-tags
+    %h3 Missing Tags
+    %ul
+      - @results[:unmatched_tags].map { |e| "<a href='https://hub.docker.com/u/#{e.split(':')[0]}'>#{e}</a>" }.each do |link|
+        %li= link
+  - @results[:layers].each do |layer, tags|
+    .layer
+      %strong.mono= badass_id(layer)
+      &#8592;
+      - if tags.any? { |e| e["match"] }
+        - tag = tags.detect { |e| e["match"] }["name"]
+        %a.match{href: "https://hub.docker.com/u/#{tag.split(':')[0]}"}= tag
+        %span.check= "&#10003;"
+      - elsif tags.none?
+        %em.untagged untagged
+        %span.untagged &#9785;
+      - else
+        = tags.map{ |e| "<a href='https://hub.docker.com/u/#{e['name'].split(':')[0]}'>#{e['name']}</a>" }.join(", ")
