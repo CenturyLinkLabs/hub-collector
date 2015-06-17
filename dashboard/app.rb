@@ -1,4 +1,5 @@
 require 'sinatra'
+require 'json'
 require 'haml'
 require 'pg'
 require_relative '../api'
@@ -18,6 +19,26 @@ get '/analyze' do
   expected = params[:expected] && params[:expected].split("\r\n")
   @results = params[:image] ? analyze(params[:image], (expected || [])) : {layers: {}, unmatched_tags: []}
   haml :analyze
+end
+
+get '/repos/*/refs' do
+  tags = []
+  repo = params['splat'].first
+
+  loop do
+    begin
+      dockerfile = get_dockerfile(repo)
+    rescue NotFoundError
+      break
+    end
+
+    from_line = dockerfile.split(/\n/).first
+    tag = from_line.strip.split(/ /).last
+    tags << tag
+    repo = tag.split(/:/).first
+  end
+
+  tags.to_json
 end
 
 def analyze(image, expected)

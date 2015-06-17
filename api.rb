@@ -101,6 +101,24 @@ def get_id_for_tag(repo, tag, auth)
   end
 end
 
+def get_dockerfile(repo)
+  retry_once do
+    uri = URI("https://registry.hub.docker.com/u/#{repo}/dockerfile/raw")
+
+    req = Net::HTTP::Get.new(uri)
+
+    http = Net::HTTP.new(uri.host, uri.port)
+    http.use_ssl = true
+
+    res = http.start do |http|
+      http.request(req)
+    end
+
+    check_status(res)
+    res.body
+  end
+end
+
 def retry_once
   retryable = true
   begin
