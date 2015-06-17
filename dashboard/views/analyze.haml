@@ -6,7 +6,7 @@
     %input{ type: 'text', name: 'image', placeholder: 'e.g. centurylink/panamax-ui:latest', value: params[:image] }
   %label
     Expected Tags
-    %textarea{ name: 'expected', placeholder: 'gliderlabs/alpine:3.1' }= params[:expected]
+    %textarea{ name: 'expected', placeholder: 'gliderlabs/alpine:3.1' }= @expected.join("\r\n")
   %button Analyze
 
 .results

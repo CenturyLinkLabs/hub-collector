@@ -16,14 +16,24 @@ get '/' do
 end
 
 get '/analyze' do
-  expected = params[:expected] && params[:expected].split("\r\n")
-  @results = params[:image] ? analyze(params[:image], (expected || [])) : {layers: {}, unmatched_tags: []}
+  if !params[:image].nil? && params[:image] != "" && (params[:expected].nil? || params[:expected] == "")
+    repo, tag = params[:image].split(':')
+    expected = fetch_expected_tags(repo)
+  elsif !params[:expected].nil?
+    expected = params[:expected].split("\r\n")
+  end
+  @expected = expected
+  @results = params[:image] ? analyze(params[:image], (expected.dup || [])) : {layers: {}, unmatched_tags: []}
   haml :analyze
 end
 
 get '/repos/*/refs' do
-  tags = []
   repo = params['splat'].first
+  fetch_expected_tags(repo).to_json
+end
+
+def fetch_expected_tags(repo)
+  tags = []
 
   loop do
     begin
@@ -38,10 +48,11 @@ get '/repos/*/refs' do
     repo = tag.split(/:/).first
   end
 
-  tags.to_json
+  tags
 end
 
 def analyze(image, expected)
+  puts "============ expected\n\n", expected.inspect
   repo, tag = image.split(':')
 
   auth = get_auth(repo)
