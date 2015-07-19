@@ -20,6 +20,8 @@ conn.prepare('update_repo', 'UPDATE repos SET last_loaded=current_timestamp WHER
 
 conn.prepare('mark_repo', 'UPDATE repos SET marked = true WHERE id=$1')
 
+shutdown = false
+
 def delete_repo_tags(repo_id)
   conn.transaction do |c|
     tags = c.exec_prepared('select_tags', [repo_id])
@@ -60,18 +62,12 @@ def load_ancestry(tag_rec_id, layer_id, auth)
   layer_rec_id
 end
 
+Signal.trap("USR1") { shutdown = !shutdown }
+
 # Forever
 loop do
   puts "start crawl: #{Time.now}"
 
-  s = 'SELECT repos.id, repos.name'\
-    ' FROM repos'\
-    ' LEFT JOIN tags ON repos.id = tags.repo_id'\
-    ' LEFT JOIN tag_layers ON tags.id = tag_layers.tag_id'\
-    ' WHERE tag_layers.tag_id IS NULL'\
-    ' GROUP BY repos.id, repos.name'
-
-  #repos = conn.exec(s)
   repos = conn.exec('SELECT id, name FROM repos ORDER BY last_loaded ASC')
 
   repos.each do |repo|
@@ -79,11 +75,15 @@ loop do
     repo_name = repo['name']
     puts "REPO: #{repo_name}"
 
-    delete_repo_tags(repo_id)
-
     begin
       auth = get_auth(repo_name)
-      tags = list_tags(repo_name, auth)
+      tags = begin
+        list_tags(repo_name, auth)
+      rescue NotFoundError
+        []
+      end
+
+      delete_repo_tags(repo_id)
 
       tags.each do |name, tag_layer_id|
         puts "  TAG: #{name}"
@@ -110,5 +110,7 @@ loop do
     rescue => ex
       puts "ERROR: #{ex} (#{repo_name})"
     end
+
+    exit 0 if shutdown
   end
 end

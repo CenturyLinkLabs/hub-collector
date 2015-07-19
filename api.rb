@@ -52,6 +52,7 @@ def list_tags(repo, auth)
 
     http = Net::HTTP.new(uri.host, uri.port)
     http.use_ssl = true
+    http.read_timeout = 300
 
     res = http.start do |http|
       http.request(req)

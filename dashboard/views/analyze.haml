@@ -6,15 +6,19 @@
     %input{ type: 'text', name: 'image', placeholder: 'e.g. centurylink/panamax-ui:latest', value: params[:image] }
   %label
     Expected Tags
-    %textarea{ name: 'expected', placeholder: 'gliderlabs/alpine:3.1' }= @expected.join("\r\n")
+    - if @expected
+      %textarea{ name: 'expected'}= @expected.join("\r\n")
+    - else
+      %textarea{ name: 'expected'}
   %button Analyze
 
 .results
-  .missing-tags
-    %h3 Missing Tags
-    %ul
-      - @results[:unmatched_tags].map { |e| "<a href='https://hub.docker.com/u/#{e.split(':')[0]}'>#{e}</a>" }.each do |link|
-        %li= link
+  - if @results && @results[:unmatched_tags].any?
+    .missing-tags
+      %h3 Missing Tags
+      %ul
+        - @results[:unmatched_tags].map { |e| "<a href='https://hub.docker.com/u/#{e.split(':')[0]}'>#{e}</a>" }.each do |link|
+          %li= link
   - @results[:layers].each do |layer, tags|
     .layer
       %strong.mono= badass_id(layer)
@@ -25,6 +29,5 @@
         %span.check= "&#10003;"
       - elsif tags.none?
         %em.untagged untagged
-        %span.untagged &#9785;
       - else
         = tags.map{ |e| "<a href='https://hub.docker.com/u/#{e['name'].split(':')[0]}'>#{e['name']}</a>" }.join(", ")
